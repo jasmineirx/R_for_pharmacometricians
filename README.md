@@ -1,4 +1,4 @@
-# R_for_pharmacometricians
+# R for Pharmacometricians
 ## Administrative Things
 
 ### Where to find stuff
