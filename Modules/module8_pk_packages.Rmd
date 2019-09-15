@@ -1,0 +1,287 @@
+---
+title: 'Module 8: Pharmacokinetic R Packages'
+author: "Jasmine Hughes"
+date: "9/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# PKPDsim
+
+>PKPDsim is an R package for numerical integration of ODE systems, in particular pharmacokinetic-pharmacodynamic (PK-PD) mixed-effects models.
+
+>In pharmacometrics, models are often defined as systems of ordinary differential equations (ODEs). Although solving ODEs numerically in R is relatively straightforward using e.g. the deSolve library, the implementation of e.g. infusions and complex dosing regimens as well as the incorporation of random effects is cumbersome. Outside of R, a tool like Berkeley Madonna provides excellent interactivity features and is fast, but is much inferior to R regarding plotting functionality, cumbersome regarding implementation of dose regimens and multi-level variability, and also not open source.
+
+>For fast numerical integration of the ODEs, the module uses the Boost C++ library under the hood.
+
+```{r PKPDsim}
+#devtools::install_github('InsightRX/PKPDsim')
+library(PKPDsim)
+
+# Get a pre-specified generic model
+pk1 <- new_ode_model(model = "pk_2cmt_iv_auc")
+pk1
+new_ode_model() # To see available models
+
+# Or specify your own system of ODEs
+pk2 <- new_ode_model(
+  code = "
+  CLi = WT/70
+  KEL = CLi/V
+  dAdt[1] = -KA * A[1]
+  dAdt[2] = +KA * A[1] -(CL*(WT/70)/V) * A[2]
+  ", 
+  declare_variables = c("KEL", "CLi"), 
+  covariates = c("WT"))
+
+
+```
+
+To simulate time courses, you need to create a few more specialized objects to fully define the system.
+
+```{r PKPDsim2}
+
+# Define the regimen
+reg1 <- new_regimen(
+  amt = 1000,
+  interval = 12,
+  n = 6
+)
+
+# Define patient characteristics
+pars1 <- list(
+  "KA" = 1,
+  "CL" = 5,
+  "V" = 50,
+  "Q" = 2.28,
+  "V2" = 60
+)
+
+# Simulate the PK curve
+pk1_res1 <- sim_ode(
+  ode = pk1,              
+  parameters = pars1,  
+  regimen = reg1         
+)
+
+pk1_res1 %>%
+  mutate(comp = case_when(
+    comp == 1 ~ 'First Compartment',
+    comp == 2 ~ 'Second Compartment',
+    comp == 3 ~ 'AUC',
+    TRUE      ~ 'Observation Compartment (TDMs)'
+  )) %>%
+  ggplot() +
+  aes(x = t, y = y) +
+  geom_line() +
+  facet_wrap(~comp, scales = 'free')
+
+```
+
+Allows for exploration of different regimen on PK time curves, given a set of PK parameters, or vice versa.
+
+```{r comparing_regimen}
+reg2 <- new_regimen(
+  amt = 750,
+  interval = 8,
+  n = 9
+)
+
+pk1_res2 <- sim_ode(
+  ode = pk1,              
+  parameters = pars1,  
+  regimen = reg2         
+)
+
+bind_rows(mutate(pk1_res1, regi = 1),
+          mutate(pk1_res2, regi = 2)) %>%
+  mutate(comp = case_when(
+    comp == 1 ~ 'First Compartment',
+    comp == 2 ~ 'Second Compartment',
+    comp == 3 ~ 'AUC',
+    TRUE      ~ 'Observation Compartment (TDMs)'
+  )) %>%
+  ggplot() +
+  aes(x = t, y = y, color = factor(regi)) +
+  geom_line() +
+  facet_wrap(~comp, scales = 'free')
+
+```
+```{r comparing_parameters}
+
+pars2 <- list(
+  "KA" = 1,
+  "CL" = 8,      #60% higher clearance than pars1
+  "V" = 50,
+  "Q" = 2.28,
+  "V2" = 60
+)
+
+pk1_res3 <- sim_ode(
+  ode = pk1,              
+  parameters = pars2,  
+  regimen = reg1         
+)
+
+bind_rows(mutate(pk1_res1, par = 1),
+          mutate(pk1_res3, par = 2)) %>%
+  mutate(comp = case_when(
+    comp == 1 ~ 'First Compartment',
+    comp == 2 ~ 'Second Compartment',
+    comp == 3 ~ 'AUC',
+    TRUE      ~ 'Observation Compartment (TDMs)'
+  )) %>%
+  ggplot() +
+  aes(x = t, y = y, color = factor(par)) +
+  geom_line() +
+  facet_wrap(~comp, scales = 'free')
+
+
+```
+
+A key part of NLMEM is interindividual/residual variability. These parameters can be specified through the `omega` and `ruv` arguments.
+
+```{r variability}
+pk1_omega <- sim_ode(
+  ode = pk1,              
+  parameters = pars2,  
+  regimen = reg1,
+  omega = c(0.2, 
+            0.05, 0.1), #default is to assume exponential distribution
+  n = 50 # do 50 simulations, sampling randomly
+)
+
+pk1_omega %>% 
+  filter(comp == 'obs') %>%
+  ggplot() +
+  aes(x = t, y = y, color = as.factor(id)) +
+  geom_line(alpha = 0.5) +
+  theme(legend.position = 'none') 
+
+
+```
+
+```{r variability2}
+
+pk1_ruv <- sim_ode(
+  ode = pk1,              
+  parameters = pars2,  
+  regimen = reg1,
+  omega = c(0.2, 
+            0.05, 0.1), 
+  n = 50,
+  res_var = list(prop = 0.05, add = 0.1)  #5% proportional, 0.1 additive
+)
+
+pk1_ruv %>% 
+  filter(comp == 'obs') %>%
+  ggplot() +
+  aes(x = t, y = y, color = as.factor(id)) +
+  geom_line(alpha = 0.5) +
+  theme(legend.position = 'none') 
+
+```
+More information available in function documentation, and at `http://pkpdsim.ronkeizer.com/`.
+
+#PKNCA
+> PKNCA provides functions to complete noncompartmental analysis (NCA) for pharmacokinetic (PK) data. Its intent is to provide a complete R-based solution enabling data provenance for NCA including tracking data cleaning, enabling calculations, exporting results, and reporting. The library is designed to give a reasonable answer without user intervention (load, calculate, and summarize), but it allows the user to override the automatic selections at any point.
+
+PKNCA imports dplyr & tidyr, and provides some functionality for data cleaning.
+
+```{r PKNCA_setup}
+#install.packages("PKNCA")
+library(PKNCA)
+
+```
+
+Similar steps to above, except that no model is necessary to specify.
+
+- create regimen object
+
+- create patient object
+
+- create concentration object
+
+- estimate AUC
+
+```{r PKNCA_data}
+
+conc_data <- data.frame(Subject = rep(1, 11),
+                        Wt = rep(79.6, 11),
+                        Dose = rep(4.02, 11),
+                        Time = c(0, 0.25, 0.57, 1.12, 2.02, 3.82, 5.1, 7.03, 9.05, 12.12, 24.37),
+                        conc = c(0.74, 2.84, 6.57, 10.5, 9.66, 8.58, 8.36, 7.47, 6.89, 5.94, 3.28))
+# Let's take a peak at what this looks like first
+conc_data %>%
+  ggplot() +
+  aes(x = Time, y = conc) +
+  geom_line() +
+  geom_point()
+```
+
+
+```{r PKNCA_object_creation}
+
+dose_data <- filter(conc_data, Time == 0)
+
+
+## Create a concentration object specifying the concentration, time, and
+## subject columns.  
+conc_obj <- PKNCAconc(conc_data,
+                      conc ~ Time | Subject)
+conc_obj
+
+## Create a dosing object specifying the dose, time, and subject
+## columns.  (Column names and data grouping must be the same between
+## the two objects.)
+dose_obj <- PKNCAdose(dose_data,
+                      Dose ~ Time | Subject)
+dose_obj
+
+## Combine the concentration and dosing information
+data_obj <- PKNCAdata(conc_obj, dose_obj)
+
+## Calculate the NCA parameters
+results_obj <- pk.nca(data_obj)
+
+## Summarize the results
+summary(results_obj)
+```
+
+PKNCA is doing a lot under the hood, and has a philosophy of making it easy to get started (like above) but also very flexible. Let's see what some of its default assumptions are:
+
+```{r PKNCA_under_the_hood}
+# (might be easier to read console output rather than RMarkdown output)
+PKNCA.options()
+
+# Can also use this function to change calculation specification
+PKNCA.options(allow.tmax.in.half.life = TRUE)
+
+```
+
+See more options here: 
+https://cran.r-project.org/web/packages/PKNCA/vignettes/Introduction-and-Usage.html
+
+# Take-home?
+
+The ability to create, share/collaborate and iterate on code/packages is one of the pro's of using R. See more PK packages here: 
+
+- https://cran.r-project.org/web/views/Pharmacokinetics.html
+- See VPC, which plots NONMEM outputs using ggplot: https://cran.r-project.org/web/packages/vpc/index.html 
+
+Packages can be thought of a related set of functions that work together to accomplish a particular type of task.
+
+Don't reinvent the wheel: if a package to do 90% of what you need to do exists, use it! You can write the remaining pieces yourself (and maybe contribute it to improve the original package!).
+
+Don't Repeat Yourself (DRY): if you find yourself copy/pasting code a few times, write a function to handle it. (The opposite of DRY is WET (Write Everything Twice)) If you find yourself relying on a few related functions, turn it into a package. More on this in the next module....
+
+# Breakout
+
+### Basics
+
+1. Use the data available in `datasets::Theoph` to estimate AUC for all the patients in the study, using non-compartmental analysis. Graphically represent your results. 
+
+2. Use PKPDsim to simulate PK curves for a patient with less consistent dosing, by providing `times = c(...)` and `amt = c(...)` as arguments to `new_regimen()`.
