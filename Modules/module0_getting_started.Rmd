@@ -102,7 +102,7 @@ Then to update from the repository to get any changes we've made:
 - R is being actively developed with ongoing updates/new releases
 - R has a variety of built-in as well as community-provided packages that extend its functionality with code and data; see [CRAN](https://cran.r-project.org/web/packages/index.html) for the thousands of add-on packages
 - It is freely-available and modifiable 
-- Available for Windows, Mac OS X, and [Linux](http://dilbert.com/strips/comic/1995-06-24/)
+- Available for Windows, Mac OS X, and Linux
 
 
 # Modes of using R

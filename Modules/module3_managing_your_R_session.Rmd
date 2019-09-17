@@ -206,11 +206,11 @@ It's good to first look at your data in plain text format outside of R and then 
 
 # Reading 'foreign' format data
 
-Here's an example of reading data produced by another statistical package (Stata) with `read.dta()`. 
+Here's an example of reading data produced by another statistical package (Stata) with `read_dta()`. 
 
 ```{r}
 library(haven)
-vote <- read_dta(file.path('..', 'data', '2004_labeled_processed_race.dta'))
+vote <- read_dta(file.path('..', 'Data', '2004_labeled_processed_race.dta'))
 head(vote)
 ```
 
