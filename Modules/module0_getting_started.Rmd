@@ -40,7 +40,7 @@ I encourage you to:
 - keep your eyes open! -- We'll illustrate a lot of syntax and concepts by example
 - try to guess what the syntax means in cases we haven't yet seen that syntax
 - play with it and try variations and try to break it and see what happens
-- tell us if something interesting happens as you experiment, or post a comment in the chat room
+- tell us if something interesting happens as you experiment
 - ask questions!!
 
 If you find yourself not following everything, that's ok. You may miss some details, but try to follow the basics and the big picture. 
@@ -58,17 +58,19 @@ We'll present most of the material from within RStudio, using R Markdown documen
 
 # Using Github to get the documents
 
+https://github.com/jasmineirx/R_for_pharmacometricians
 To download the files from Github, you can do the following. 
 
 ## As a zip file (Easiest!)
 
 If you don't want to bother using Git or have problems, simply download a zip file with all the material from github. Navigate to the repo, and click the big green "clone or download" button.
+https://github.com/jasmineirx/R_for_pharmacometricians 
 
 ## Within RStudio
 
 Within RStudio go to File->New Project->Version Control->Git and enter:
 
-- "Repository URL"
+- "Repository URL" jasmineirx/R_for_pharmacometricians
 - "Project Directory Name": r-for-pharmacometricians (or something else of your choosing)
 - "Directory": ~/Desktop (or somewhere of your choosing)
 
