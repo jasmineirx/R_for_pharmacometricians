@@ -60,7 +60,7 @@ If you don't want to bother using Git or have problems, simply download a zip fi
 
 Within RStudio go to File->New Project->Version Control->Git and enter:
 
-- "Repository URL"
+- "Repository URL": github.com/jasmineirx/R_for_pharmacometricians
 - "Project Directory Name": r-for-pharmacometricians (or something else of your choosing)
 - "Directory": ~/Desktop (or somewhere of your choosing)
 
