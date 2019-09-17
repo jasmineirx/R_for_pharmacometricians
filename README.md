@@ -13,7 +13,7 @@ Requirements:
 
 - Participate in a 2-day workshop (so far, great start!)
 - Complete the assignment. 11 questions, beginning with a dataset, manipulating data, performing basic calculations, using some clinical reasoning, presenting findings graphically.
-- Email the assignment to Professor Krzyzanski; wk AT> buffalo.edu
+- Email the assignment to Professor Krzyzanski; wk <AT> buffalo.edu
 
 
 ## How to learn programming
@@ -32,7 +32,7 @@ I encourage you to:
 - keep your eyes open! -- We'll illustrate a lot of syntax and concepts by example
 - try to guess what the syntax means in cases we haven't yet seen that syntax
 - play with it and try variations and try to break it and see what happens
-- tell us if something interesting happens as you experiment, or post a comment in the chat room
+- tell us if something interesting happens as you experiment
 - ask questions!!
 
 If you find yourself not following everything, that's ok. You may miss some details, but try to follow the basics and the big picture. 
