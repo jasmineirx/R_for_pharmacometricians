@@ -1,0 +1,415 @@
+---
+title: "Solutions"
+author: "Jasmine Hughes"
+date: "9/17/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Module 1: Basics
+
+
+```{r basics1}
+## 1 ##
+x <- mean(gap$lifeExp)
+
+## 2 ##
+# help(round)
+round(x, digits = 2)
+round(x, digits = 0)
+
+## 3 ##
+EurosPerDollar <- 1.1  
+gdpPercap_euro <- gap$gdpPercap * EurosPerDollar
+c(gdpPercap_euro[1], gap$gdpPercap[1])
+
+## 4 ##
+big <- gap$gdpPercap * gap$pop > 1e12 
+head(big)
+```
+
+```{r using_the_ideas1}
+
+## 5 ##
+big <- gap$gdpPercap * gap$pop > 1e12 
+big_gap <- gap[big, ]
+head(big_gap)
+
+```
+
+# Module 2: Working with objects and data
+
+```{r, basics3}
+## 1 ##
+gap[5, ]
+
+## 2 ##
+gap[ nrow(gap) , ]
+
+## 3 ##
+sum(gap$gdpPercap > 50000)
+
+## 4 ##
+gap2 <- gap
+gap2$gdpPercap[ gap2$gdpPercap > 50000 ] <- NA
+
+## 5 ##
+paste(gap$country[1], gap$year[1], sep = "-")
+```
+
+```{r, using_the_ideas3}
+## 6 ##
+paste("There are ", nrow(gap), " rows in the dataset.", sep = "")
+
+## 7 ##
+gap[ nrow(gap), ]
+
+## 8 ##
+economical <- gap$lifeExp > 75 & gap$gdpPercap < 10000
+mean(economical)   # sum(economical) / length(economical)
+
+## 9 ##
+sub <- gap[ economical , ]
+
+```
+
+```{r, advanced3}
+
+## 10 ##
+head(gap)
+nm <- paste(gap$continent, gap$country, gap$year, sep = "-")
+attributes(gap)$row.names <- nm
+head(gap)
+```
+
+
+# Module 3: Managing R and R resources
+
+```{r, basics2}
+## 1 ##
+install.packages('lmtest', repos = 'https://cran.cnr.berkeley.edu')
+
+## 2 ##
+getwd()
+```
+
+```{r, using_the_ideas2}
+## 3 ##
+curdir <- getwd()
+system('cp ../data/cpds.csv ~/Downloads')  # accessing system calls within R (won't work in Windows)
+setwd('~/Downloads')  # setwd('C:\\Users\\Your_Username\\Downloads')
+cpds <- read.csv('cpds.csv')
+setwd('~/Desktop')  # setwd('C:\\Users\\Your_Username\\Desktop')
+write.csv(cpds, file = 'new_cpds.csv', row.names = FALSE, quote = FALSE)
+
+## 4 ## 
+library(graphics)
+library(maps)
+searchpaths()
+
+```
+
+```{r, advanced2}
+## 5 ##
+library(spam)
+backsolve
+base::backsolve
+search()
+```
+
+# Module 4: Programming
+
+```{r, basics6}
+## 1 ##
+threshZero <- function(x) {
+   x[x < 0] <- 0
+   return(x)
+}
+```
+
+```{r, using_the_ideas6}
+## 2 ##
+thresh <- function(x, threshold = 0, below = TRUE) {
+    if(below) {
+       x[ x < threshold ] <- threshold
+    } else {
+       x[ x > threshold ] <- threshold
+    }
+    return(x)
+}
+
+## 3 ##
+thresh <- function(x, threshold = 0, below = TRUE) {
+    if(!is.numeric(x) || is.list(x)) stop("'x' must be a numeric vector")
+    if(below) {
+       x[ x < threshold ] <- threshold
+    } else {
+       x[ x > threshold ] <- threshold
+    }
+    return(x)
+}
+
+## 4 ##
+colSort <- function(data, col1, col2) {
+    ord <- order(data[, col1], data[, col2], decreasing=TRUE)
+    sorted <- data[ord, ]
+    invisible(sorted)
+}
+```
+
+```{r, advanced6}
+## 5 ##
+colSort <- function(data, ...) {
+    ord <- order(..., decreasing=TRUE)
+    sorted <- data[ord, ]
+    invisible(sorted)
+}
+
+## 6 ##
+colSort <- function(data, ..., cols = NULL, decreasing = FALSE) {
+   if(is.null(cols)) {
+      ord <- order(..., decreasing = decreasing)
+   } else {
+     if((!is.numeric(cols) && !is.character(cols)) || is.list(cols))
+        stop("'cols' must be a numeric or character vector")
+     if(is.numeric(cols) && max(cols) > ncol(data) ||
+        is.character(cols) && any(!cols %in% names(data)))
+           stop("'cols' refers to non-existent column")
+      ord <- do.call(order, data[ , cols])
+   }
+   sorted <- data[ord, ]
+   invisible(sorted)
+}
+
+```
+
+# Module 5: Data manipulation using the tidyverse
+
+```{r, basics5}
+library(tidyr)
+
+## 1 ##
+gap_median_lifeExp <- gap %>%
+    group_by(continent) %>%
+    summarize(med_lifeExp = median(lifeExp))
+
+## 2 ## 
+gap_pop_continent <- gap %>%
+    group_by(continent, year) %>%
+    mutate(continent_pop = sum(pop))
+
+## 3 ##
+gap_rel_gdp <- gap %>%
+    group_by(continent, year) %>%
+    mutate(gdpPercap_diff = gdpPercap - mean(gdpPercap)) %>%
+    arrange(desc(gdpPercap_diff))
+
+## 4 ##
+gap_wider <- gap_rel_gdp %>% 
+  select(country, year, gdpPercap_diff) %>% 
+  spread(year, gdpPercap_diff)
+
+```
+
+
+# Module 6: Data Analysis
+
+```{r, basics7}
+## 1 ##
+popMean <- 5
+x <- rpois(100, popMean)
+mean(x) - popMean
+
+## 2 ##
+qchisq(0.95, 1)
+
+## 3 ##
+1 - pnorm(5)  # pnorm(5, upper.tail = TRUE)
+1 - pt(5, df = 1)
+```
+
+```{r, using_the_ideas7}
+
+## 4 ##
+reg1 <- lm(lifeExp ~ log(gdpPercap) + log(pop) + year, 
+                data=gap)
+## here we assume a linear relationship of gdp with year
+## this is not flexible but allows us to fit the model with less data
+
+reg2 <- lm(lifeExp ~ log(gdpPercap) + log(pop) + factor(year), 
+                data = gap)
+## here we assume a completely arbitrary relationship of gdp with year
+## we need enough data in each year to be able to reasonably estimate the average lifeExp for that year, given the other explanatory variables
+
+
+## 5 ##
+nBoot <- 500
+vals <- rep(0, nBoot)
+
+for(i in seq_len(nBoot)) { 
+      smp <- sample(seq_len(nrow(gap)), replace = TRUE) 
+      vals[i] <- mean(gap$lifeExp[smp], na.rm = TRUE)
+}
+hist(vals)
+
+## bootstrap based standard error (s.d. of sampling distribution)
+se_boot <- sd(vals)
+
+## standard error using usual sigma/sqrt(n) calculation
+n <- sum(!is.na(gap$lifeExp))
+se_norm <- sd(gap$lifeExp, na.rm = TRUE) / sqrt(n)
+
+## 6 ##
+mod <- gam(lifeExp ~ s(gdpPercap, k = 30) + s(year, k = 10), data = gap)
+plot(mod)
+summary(mod)
+
+mod <- gam(lifeExp ~ s(gdpPercap, k = 60) + s(year, k = 10), data = gap)
+plot(mod)
+summary(mod)  # edf values are about the same as previously so 'k' is not constraining
+
+mod <- gam(lifeExp ~ s(gdpPercap, k = 4) + s(year, k = 3), data = gap)
+plot(mod)
+# Now the edf is much lower (and R^2 has decreased).
+# Note that uncertainty is decreased under the nearly linear fit for year.
+
+```
+
+```{r, advanced7}
+
+## 7 ##
+library(dplyr)
+gap2 <- gap %>%
+  mutate(sign = ifelse(lifeExp > 60, 1, 0))
+
+reg_logit <- glm(sign ~ log(gdpPercap) + log(pop),
+                family = binomial(link = "logit"), data = gap2)
+
+## 8 ## 
+nFolds <- 10
+n <- nrow(gap)
+fold_size <- rep(round(n / nFolds), nFolds)
+fold_size[nFolds] <- n - (nFolds - 1)*fold_size[1]
+
+fold <- rep(1:nFolds, times = fold_size)
+table(fold)
+set.seed(1)
+gap$fold <- sample(fold, replace = TRUE)
+
+## 9 ##
+n <- 100
+nReps <- 10000
+data <- matrix(rpois(n*nReps, 3), ncol = nReps)
+mns <- colMeans(data)
+par(mfrow = c(1, 2))
+hist(mns)
+qqnorm(mns)
+```
+
+# Module 7: Graphings
+
+```{r, basics8}
+
+## 1 ##
+ggplot(data = gap, aes(x = lifeExp)) + geom_histogram()
+
+## 2 ##
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp)) + geom_point() 
+
+## 3 ##
+pdf('delays.pdf')
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp)) + geom_point() + 
+  ggtitle("Life expectancy vs. per capita GDP") + xlab(label = "GDP per capita (dollars)") +
+  ylab(label = "life expectancy (years)")
+dev.off()
+
+## 4 ##
+ggplot(data = gap, aes(x = factor(year), y = lifeExp)) + geom_boxplot()
+```
+
+```{r, using_the_ideas8}
+## 5 ##
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp)) + geom_point() + facet_wrap(~year, nrow = 3, ncol = 4)
+
+## 6 ##
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp, color = continent)) + geom_point() + scale_x_continuous(limits = c(100, 50000))
+
+## 7 ##
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp, color = continent)) + geom_point() + scale_x_log10(limits = c(100, 50000))
+```
+
+```{r, advanced8}
+
+## 8 ##
+ggplot(data = gap, aes(x = gdpPercap, y = lifeExp)) + 
+  geom_point(alpha = 0.3) + 
+  geom_smooth(method = "loess", color = 'red', se = FALSE)  +
+  scale_x_log10(limits = c(100, 50000)) + 
+  facet_wrap(~year, nrow = 3) + 
+  theme_bw()
+```
+
+# Module 8: PK Packages
+
+```{r basics}
+
+d_conc <- datasets::Theoph %>%
+  mutate(Subject=as.numeric(as.character(Subject)))
+d_dose <- d_conc[d_conc$Time == 0,]
+d_dose$Time <- 0
+
+conc_obj <- PKNCAconc(d_conc,
+                      conc~Time|Subject)
+dose_obj <- PKNCAdose(d_dose,
+                      Dose~Time|Subject)
+data_obj <- PKNCAdata(conc_obj, dose_obj)
+results_obj <- pk.nca(data_obj)
+
+results_obj$result %>%
+  filter(PPTESTCD == 'aucinf.obs')  %>%
+  ggplot() +
+  aes(x = PPORRES) +
+  geom_histogram()
+```
+
+
+```{r PKPDsim2}
+
+# Define the regimen
+reg4 <- new_regimen(
+  amt = c(1000, 750, 500),
+  interval = c(12, 24.5, 30)
+)
+
+# Define patient characteristics
+pars1 <- list(
+  "KA" = 1,
+  "CL" = 5,
+  "V" = 50,
+  "Q" = 2.28,
+  "V2" = 60
+)
+
+# Simulate the PK curve
+irregular <- sim_ode(
+  ode = pk1,              
+  parameters = pars1,  
+  regimen = reg4         
+)
+
+irregular %>%
+  mutate(comp = case_when(
+    comp == 1 ~ 'First Compartment',
+    comp == 2 ~ 'Second Compartment',
+    comp == 3 ~ 'AUC',
+    TRUE      ~ 'Observation Compartment (TDMs)'
+  )) %>%
+  ggplot() +
+  aes(x = t, y = y) +
+  geom_line() +
+  facet_wrap(~comp, scales = 'free')
+
+```
